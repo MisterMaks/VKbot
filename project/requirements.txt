@@ -1,0 +1,17 @@
+pytest-warnings
+bs4
+pandas
+scikit-learn
+pymorphy2
+pymorphy2-dicts
+DAWG-Python
+regex
+numpy
+annoy
+gensim
+pickle-mixin
+more-itertools
+vk-api
+datetime
+random2
+requests

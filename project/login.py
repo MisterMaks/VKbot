@@ -4,12 +4,15 @@ import requests
 from tokens import isValid
 cashe = list()
 admins = list()
+notindb = list()
+admins.append('199707448')
 
 def isLogin(name):
     if name in cashe:
         return True
+    if name in notindb:
+        return False
     r = requests.get("http://danr0.pythonanywhere.com/api/users/"+str(name))
-    #print(r.text)
     if 'user' in str(r.text):
         cashe.append(name)
         return True
@@ -18,6 +21,8 @@ def isLogin(name):
 def isAdmin(name):
     if name in admins:
         return True
+    if name in notindb:
+        return False
     r = requests.get("http://danr0.pythonanywhere.com/api/users/"+str(name))
     if 'admin' in str(r.text):
         admins.append(name)
@@ -25,8 +30,8 @@ def isAdmin(name):
     return False
 
 def login(name, password):
-    #print(password)
-    #print('user'.encode('base64').replace("\n",""))
+    if not (name in notindb) and not isAdmin(name) and not isLogin(name):
+        notindb.append(name)
     val = isValid(str(password))
     if (val and len(password) > 30):
         r = requests.post("http://danr0.pythonanywhere.com/api/users/", data = name+"$admin")

@@ -8,19 +8,17 @@ from secret import passSQL
 app = Flask(__name__)
 
 print('start')
-passdb = passSQL()
-conn = MySQLdb.connect('danr0.mysql.pythonanywhere-services.com', 'danr0', passdb, 'danr0$default')
-cursor = conn.cursor()
-'''
-def connect(fn):
-    def wrapped():
-        #r = requests.get("http://danr0.pythonanywhere.com/api/err/")
-        #if 'MySQL server has gone away' in str(r.text):
-        conn = MySQLdb.connect('danr0.mysql.pythonanywhere-services.com', 'danr0', passdb, 'danr0$default')
-        cursor = conn.cursor()
-        return fn()
-        conn.close
-    return wrapped'''
+
+def execute(command):
+    passdb = passSQL()
+    conn = MySQLdb.connect('danr0.mysql.pythonanywhere-services.com', 'danr0', passdb, 'danr0$default')
+    cursor = conn.cursor()
+    cursor.execute(command)
+    conn.commit()
+    row = str(cursor.fetchall())
+    conn.close()
+    return str(row)
+
 
 
 @app.route('/')
@@ -29,7 +27,7 @@ def mainpage():
 
 @app.route('/api/', methods=['GET'])
 def apipage():
-    return "Choose the table: \n 'errors' = /api/err \n requests /api/req \n 'users' = /api/users"
+    return "Choose the table: \n 'errors' = /api/err \n 'users' = /api/users"
 
 @app.route('/api/', methods=['POST'])
 def postapi():
@@ -39,8 +37,7 @@ def postapi():
 @app.route('/api/err/', methods=['GET'])
 def errorsget():
     try:
-        cursor.execute("SELECT * FROM errors")
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM errors")
         t = row.split('), (')
         t[0] = t[0].replace('((','')
         t[-1] = t[-1].replace('))','')
@@ -54,8 +51,7 @@ def errorsget():
 @app.route('/api/err/count', methods=['GET'])
 def errgetall():
     try:
-        cursor.execute("SELECT count(*) FROM errors")
-        s = str(cursor.fetchall())
+        s = execute("SELECT count(*) FROM errors")
         s = s.replace("((",'').replace(",),)",'')
         return s
     except Exception as e:
@@ -64,8 +60,7 @@ def errgetall():
 @app.route('/api/err/<int:id>', methods=['GET'])
 def get_error(id):
     try:
-        cursor.execute("SELECT * FROM errors WHERE id ="+str(id))
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM errors WHERE id ="+str(id))
         return str(row)
     except Exception as e:
         return '500 '+str(e)
@@ -77,8 +72,7 @@ def errorspost():
         l = data.split('$')
         if len(l) != 3:
             abort(400)
-        cursor.execute("INSERT INTO errors VALUES (NULL, '"+str(l[0])+"', '"+str(l[1])+"', '"+str(l[2])+"') ")
-        conn.commit()
+        execute("INSERT INTO errors VALUES (NULL, '"+str(l[0])+"', '"+str(l[1])+"', '"+str(l[2])+"'); ")
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -87,8 +81,7 @@ def errorspost():
 @app.route('/api/err/<int:id>', methods=['DELETE'])
 def del_err(id):
     try:
-        cursor.execute("DELETE FROM errors WHERE id ="+str(id))
-        conn.commit()
+        execute("DELETE FROM errors WHERE id ="+str(id))
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -99,18 +92,17 @@ def patch_err(id):
         data = (request.data).decode("utf-8")
         if data == '':
             abort(400)
-        cursor.execute("UPDATE errors SET err = '"+str(data)+"' WHERE id ="+str(id))
-        conn.commit()
+        execute("UPDATE errors SET err = '"+str(data)+"' WHERE id ="+str(id))
         abort(200)
     except Exception as e:
         return '500 '+str(e)
 
-
+'''
 @app.route('/api/req/', methods=['GET'])
 def reqget():
     try:
-        cursor.execute("SELECT * FROM requests")
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM requests")
+        #row = str(cursor.fetchall())
         t = row.split('), (')
         t[0] = t[0].replace('((','')
         t[-1] = t[-1].replace('))','')
@@ -124,8 +116,8 @@ def reqget():
 @app.route('/api/req/count', methods=['GET'])
 def reqgetall():
     try:
-        cursor.execute("SELECT count(*) FROM requests")
-        s = str(cursor.fetchall())
+        s = execute("SELECT count(*) FROM requests")
+        #s = str(cursor.fetchall())
         s = s.replace("((",'').replace(",),)",'')
         return s
     except Exception as e:
@@ -134,8 +126,8 @@ def reqgetall():
 @app.route('/api/req/<int:id>', methods=['GET'])
 def get_req(id):
     try:
-        cursor.execute("SELECT * FROM requests WHERE id ="+str(id))
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM requests WHERE id ="+str(id))
+        #row = str(cursor.fetchall())
         return str(row)
     except Exception as e:
         return '500 '+str(e)
@@ -147,8 +139,8 @@ def reqpost():
         l = data.split('$')
         if len(l) != 3:
             abort(400)
-        cursor.execute("INSERT INTO requests VALUES (NULL, '"+str(l[0])+"', '"+str(l[1])+"', '"+str(l[2])+"') ")
-        conn.commit()
+        execute("INSERT INTO requests VALUES (NULL, '"+str(l[0])+"', '"+str(l[1])+"', '"+str(l[2])+"') ")
+        #conn.commit()
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -157,8 +149,8 @@ def reqpost():
 @app.route('/api/req/<int:id>', methods=['DELETE'])
 def del_req(id):
     try:
-        cursor.execute("DELETE FROM requests WHERE id ="+str(id))
-        conn.commit()
+        execute("DELETE FROM requests WHERE id ="+str(id))
+        #conn.commit()
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -170,8 +162,8 @@ def patch_req(id):
         data = (request.data).decode("utf-8")
         if data == '':
             abort(400)
-        cursor.execute("UPDATE requests SET text = '"+str(data)+"' WHERE id ="+str(id))
-        conn.commit()
+        execute("UPDATE requests SET text = '"+str(data)+"' WHERE id ="+str(id))
+        #conn.commit()
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -180,12 +172,11 @@ def patch_req(id):
 
 #print(errorsget(cursor))
 #conn.close
-
+'''
 @app.route('/api/users/', methods=['GET'])
 def userget():
     try:
-        cursor.execute("SELECT * FROM users")
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM users")
         t = row.split('), (')
         t[0] = t[0].replace('((','')
         t[-1] = t[-1].replace('))','')
@@ -199,8 +190,7 @@ def userget():
 @app.route('/api/users/count', methods=['GET'])
 def usergetall():
     try:
-        cursor.execute("SELECT count(*) FROM users")
-        s = str(cursor.fetchall())
+        s = execute("SELECT count(*) FROM users")
         s = s.replace("((",'').replace(",),)",'')
         return s
     except Exception as e:
@@ -209,8 +199,7 @@ def usergetall():
 @app.route('/api/users/<int:id>', methods=['GET'])
 def get_user(id):
     try:
-        cursor.execute("SELECT * FROM users WHERE id ="+str(id))
-        row = str(cursor.fetchall())
+        row = execute("SELECT * FROM users WHERE id ="+str(id))
         return str(row)
     except Exception as e:
         return '500 '+str(e)
@@ -222,8 +211,7 @@ def userpost():
         l = data.split('$')
         if len(l) != 2:
             abort(400)
-        cursor.execute("INSERT INTO users VALUES ('"+str(l[0])+"', '"+str(l[1])+"') ")
-        conn.commit()
+        execute("INSERT INTO users VALUES ('"+str(l[0])+"', '"+str(l[1])+"') ")
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -232,8 +220,7 @@ def userpost():
 @app.route('/api/users/<int:id>', methods=['DELETE'])
 def del_user(id):
     try:
-        cursor.execute("DELETE FROM users WHERE id ="+str(id))
-        conn.commit()
+        execute("DELETE FROM users WHERE id ="+str(id))
         abort(200)
     except Exception as e:
         return '500 '+str(e)
@@ -244,8 +231,7 @@ def patch_user(id):
         data = (request.data).decode("utf-8")
         if data == '':
             abort(400)
-        cursor.execute("UPDATE users SET status = '"+str(data)+"' WHERE id ="+str(id))
-        conn.commit()
+        execute("UPDATE users SET status = '"+str(data)+"' WHERE id ="+str(id))
         abort(200)
     except Exception as e:
         return '500 '+str(e)

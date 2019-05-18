@@ -25,7 +25,7 @@ def adminresponce(text):
         if '/tokens' in str(text):
             return ('\n'.join(getTokens()))
         return u'команды: /gen - сгенерировать токены юзеров \n/genadmin  сгенерировать токены админов \n/tokens - вывести токены \n'
-    return response(text.encode('base64'))
+    return response(text)
 
 #print(adminresponce('/gen 3'))
 #print(adminresponce('/genadmin 3'))
